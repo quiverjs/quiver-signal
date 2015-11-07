@@ -38,7 +38,7 @@ export const createSubscription = () => {
     if(!observers.has(observer)) return
 
     try {
-      const { done } = observer.throw(newValue)
+      const { done } = observer.throw(error)
       if(done) observers.delete(observer)
 
     } catch(err) {
@@ -55,7 +55,7 @@ export const createSubscription = () => {
 
   const sendError = error => {
     for(let observer of observers) {
-      sendErrorToObserver(observer, newError)
+      sendErrorToObserver(observer, error)
     }
   }
 

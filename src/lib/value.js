@@ -4,7 +4,7 @@ export const valueSignal = (initialValue) => {
   let currentValue = initialValue
   let currentError = null
 
-  let nextResolves = []
+  let nextResolvers = []
   const subscription = createSubscription()
 
   const getCurrentValue = () => {
@@ -18,8 +18,8 @@ export const valueSignal = (initialValue) => {
   }
 
   const getNextValue = () =>
-    new Promise(resolve => {
-      nextResolves.push(resolve)
+    new Promise((resolve, reject) => {
+      nextResolvers.push({resolve, reject})
     })
 
   const setValue = async function(newValue) {
@@ -29,10 +29,10 @@ export const valueSignal = (initialValue) => {
     currentValue = newValue
     currentError = null
 
-    for(let resolve of nextResolves) {
-      resolve(newValue)
+    for(let resolver of nextResolvers) {
+      resolver.resolve(newValue)
     }
-    nextResolves = []
+    nextResolvers = []
 
     subscription.sendValue(newValue)
   }
@@ -44,11 +44,10 @@ export const valueSignal = (initialValue) => {
     currentValue = null
     currentError = newError
 
-    const errorPromise = Promise.reject(newError)
-    for(let resolve of nextResolves) {
-      resolve(errorPromise)
+    for(let resolver of nextResolvers) {
+      resolver.reject(newError)
     }
-    nextResolves = []
+    nextResolvers = []
 
     subscription.sendError(newError)
   }

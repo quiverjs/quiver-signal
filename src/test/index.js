@@ -1,3 +1,4 @@
 import './value'
 
-process.on('unhandledRejection', console.error)
+process.on('unhandledRejection',
+  err => console.error('unhandled rejection:', err.stack))
