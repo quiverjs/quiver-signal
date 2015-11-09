@@ -57,6 +57,7 @@ export const valueSignal = (initialValue) => {
   }
 
   const signal = {
+    isQuiverSignal: true,
     currentValue: getCurrentValue,
     currentError: getCurrentError,
     nextValue: getNextValue,

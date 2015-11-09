@@ -10,7 +10,7 @@ export const subscribeChannel = signal => {
   let isClosed = false
   let pendingResolve = null
 
-  const resolvers = []
+  let resolvers = []
 
   const nextValue = () =>
     new Promise((resolve, reject) => {
