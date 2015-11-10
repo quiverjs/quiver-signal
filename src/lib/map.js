@@ -77,10 +77,12 @@ export const mapSignal = (signal, mapper) => {
   }
 
   const subscribe = observer => {
-    subscription.subscribe(observer)
+    const unsubscribe = subscription.subscribe(observer)
     if(!pipeRunning) {
       pipeMap()
     }
+    
+    return unsubscribe
   }
 
   const mappedSignal = {

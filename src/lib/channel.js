@@ -28,19 +28,6 @@ export const subscribeChannel = signal => {
       }
     })
 
-  const close = () => {
-    if(isClosed) return
-
-    isClosed = true
-    resolvers = []
-
-    if(pendingResolve) {
-      const [ resolve, reject ] = pendingResolve
-      reject(new Error('channel closed'))
-      pendingResolve = null
-    }
-  }
-
   const observer = generatorObserver(function*() {
     while(!isClosed) {
       let resolver
@@ -63,7 +50,19 @@ export const subscribeChannel = signal => {
     }
   })
 
-  signal.subscribe(observer)
+  const unsubscribe = signal.subscribe(observer)
+  const close = () => {
+    if(isClosed) return
+    isClosed = true
+    resolvers = []
+    unsubscribe()
+
+    if(pendingResolve) {
+      const [ resolve, reject ] = pendingResolve
+      reject(new Error('channel closed'))
+      pendingResolve = null
+    }
+  }
 
   const channel = {
     nextValue,
