@@ -38,6 +38,23 @@ export const mapSignal = (signal, mapper) => {
     }
   }
 
+  const getNextValue = async function() {
+    let currentValue = getCurrentValue()
+    const channel = subscribeChannel(signal)
+
+    while(true) {
+      const latestValue = await channel.nextValue()
+      const mappedValue = mapper(latestValue)
+
+      if(mappedValue !== currentValue) {
+        channel.close()
+        return mappedValue
+      }
+
+      currentValue = mappedValue
+    }
+  }
+
   let pipeRunning = false
   const pipeMap = () => {
     if(pipeRunning) return
@@ -60,28 +77,9 @@ export const mapSignal = (signal, mapper) => {
   }
 
   const subscribe = observer => {
-    if(!subscription.hasObservers()) {
-      subscription.subscribe(observer)
+    subscription.subscribe(observer)
+    if(!pipeRunning) {
       pipeMap()
-    } else {
-      subscription.subscribe(observer)
-    }
-  }
-
-  const getNextValue = async function() {
-    let currentValue = getCurrentValue()
-    const channel = subscribeChannel(signal)
-
-    while(true) {
-      const latestValue = await channel.nextValue()
-      const mappedValue = mapper(latestValue)
-
-      if(mappedValue !== currentValue) {
-        channel.close()
-        return mappedValue
-      }
-
-      currentValue = mappedValue
     }
   }
 
@@ -96,6 +94,15 @@ export const mapSignal = (signal, mapper) => {
   return mappedSignal
 }
 
+const maybeMapper = mapper =>
+  (value=null) => {
+    if(value === null) {
+      return null
+    } else {
+      return mapper(value)
+    }
+  }
+
 export const map = function(mapper) {
-  return mapSignal(this, mapper)
+  return mapSignal(this, maybeMapper(mapper))
 }
