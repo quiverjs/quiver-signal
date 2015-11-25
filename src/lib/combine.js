@@ -2,7 +2,7 @@ import {
   isImmutableMap, isImmutableList
 } from 'quiver-util/immutable'
 
-import { assertSignal } from './assert'
+import { assertSignal } from './util'
 import { createSubscription } from './subscribe'
 import { subscribeGenerator } from './generator'
 import { subscribeChannel } from './channel'

@@ -1,3 +1,4 @@
+import { equals } from './util'
 import { createSubscription } from './subscribe'
 import { subscribeGenerator } from './generator'
 import { subscribeChannel } from './channel'
@@ -20,7 +21,7 @@ export const mapSignal = (signal, mapper) => {
   const getCurrentValue = () => {
     const latestValue = signal.currentValue()
 
-    if(latestValue === lastValue)
+    if(equals(latestValue, lastValue))
       return lastMappedValue
 
     return updateLastValue(latestValue)
@@ -46,7 +47,7 @@ export const mapSignal = (signal, mapper) => {
       const latestValue = await channel.nextValue()
       const mappedValue = mapper(latestValue)
 
-      if(mappedValue !== currentValue) {
+      if(!equals(mappedValue, currentValue)) {
         channel.close()
         return mappedValue
       }
@@ -81,7 +82,7 @@ export const mapSignal = (signal, mapper) => {
     if(!pipeRunning) {
       pipeMap()
     }
-    
+
     return unsubscribe
   }
 

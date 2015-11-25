@@ -1,3 +1,4 @@
+import { equals } from './util'
 import { createSubscription } from './subscribe'
 
 export const valueSignal = (initialValue) => {
@@ -24,7 +25,7 @@ export const valueSignal = (initialValue) => {
 
   const setValue = async function(newValue) {
     await Promise.resolve()
-    if(currentValue === newValue) return
+    if(equals(currentValue, newValue)) return
 
     currentValue = newValue
     currentError = null

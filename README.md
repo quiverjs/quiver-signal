@@ -1,4 +1,4 @@
-# quiver-component-base
+# quiver-signal
 
 [![Build Status](https://travis-ci.org/quiverjs/quiver-signal.svg?branch=master)](https://travis-ci.org/quiverjs/quiver-signal)
 
