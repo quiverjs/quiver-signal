@@ -1,7 +1,6 @@
 import test from 'tape'
-import { timeout } from 'quiver-util/promise'
 import { ImmutableMap } from 'quiver-util/immutable'
-import { asyncTest, rejected } from 'quiver-util/tape'
+import { asyncTest } from 'quiver-util/tape'
 
 import { combineSignals } from '../lib/combine'
 import { valueSignal, subscribeChannel } from '../lib'

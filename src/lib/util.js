@@ -12,3 +12,14 @@ export const equals = (value1, value2) => {
 
   return false
 }
+
+export const wrapCallOnce = fn => {
+  let called = false
+
+  return (...args) => {
+    if(called) return
+
+    called = true
+    return fn(...args)
+  }
+}

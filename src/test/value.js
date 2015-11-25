@@ -198,7 +198,6 @@ test('value signal test', assert => {
       const value1 = yield
       assert.equal(value1, 'bar')
 
-      let errorCaught = false
       try {
         yield
         assert.fail('yield should throw error')

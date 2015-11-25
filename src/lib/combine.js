@@ -3,9 +3,8 @@ import {
 } from 'quiver-util/immutable'
 
 import { assertSignal } from './util'
-import { createSubscription } from './subscribe'
 import { subscribeGenerator } from './generator'
-import { subscribeChannel } from './channel'
+import { managedSubscription } from './subscribe'
 
 const errorMapToError = errorMap => {
   const hasError = errorMap.find(err => !!err)
@@ -23,8 +22,6 @@ export const combineSignals = (signalMap) => {
   for(let signal of signalMap.values()) {
     assertSignal(signal)
   }
-
-  const subscription = createSubscription()
 
   const getCurrentValue = () =>
     signalMap.map(signal =>
@@ -51,10 +48,7 @@ export const combineSignals = (signalMap) => {
     })
   }
 
-  let pipeRunning = false
-  const pipeCombine = () => {
-    let running = true
-
+  const subscribe = managedSubscription(subscription => {
     let valueMap = signalMap.map(signal => {
       try {
         return signal.currentValue()
@@ -66,21 +60,7 @@ export const combineSignals = (signalMap) => {
     let errorMap = signalMap.map(signal =>
       signal.currentError())
 
-    const channelMap = signalMap.map(subscribeChannel)
-
-    const closePipe = () => {
-      if(!running) return
-      running = false
-      let pipeRunning = false
-
-      for(let channel of channelMap.values()) {
-        channel.close()
-      }
-    }
-
     const updateValue = (key, value, error) => {
-      if(!running) return
-
       valueMap = valueMap.set(key, value)
       errorMap = errorMap.set(key, error)
 
@@ -92,33 +72,23 @@ export const combineSignals = (signalMap) => {
       }
     }
 
-    const pipeChannel = async function(key, channel) {
-      while(running) {
-        if(!subscription.hasObservers())
-          return closePipe()
-
-        try {
-          const value = await channel.nextValue()
-          updateValue(key, value, null)
-        } catch(err) {
-          updateValue(key, null, err)
+    const pipeSignal = (key, signal) => {
+      signal::subscribeGenerator(function*() {
+        while(subscription.hasObservers()) {
+          try {
+            const value = yield
+            updateValue(key, value, null)
+          } catch(err) {
+            updateValue(key, null, err)
+          }
         }
-      }
+      })
     }
 
-    for(let [key, channel] of channelMap.entries()) {
-      pipeChannel(key, channel)
+    for(let [key, signal] of signalMap.entries()) {
+      pipeSignal(key, signal)
     }
-  }
-
-  const subscribe = observer => {
-    const unsubscribe = subscription.subscribe(observer)
-    if(!pipeRunning) {
-      pipeCombine()
-    }
-
-    return unsubscribe
-  }
+  })
 
   const combinedSignal = {
     isQuiverSignal: true,

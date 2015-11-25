@@ -1,3 +1,5 @@
+import { wrapCallOnce } from './util'
+
 export const createSubscription = () => {
   const observers = new Set()
 
@@ -7,13 +9,12 @@ export const createSubscription = () => {
 
   const subscribe = observer => {
     observers.add(observer)
-
-    const unsubscribe = () => {
-      if(!observers.has(observer)) return
-
+    
+    const unsubscribe = wrapCallOnce(() => {
       observers.delete(observer)
+
       if(observer.return) observer.return()
-    }
+    })
 
     return unsubscribe
   }
@@ -60,9 +61,33 @@ export const createSubscription = () => {
   }
 
   return {
-    hasObservers,
     subscribe,
+    hasObservers,
     sendValue,
     sendError
   }
+}
+
+export const managedSubscription = runProducer => {
+  let subscription = null
+
+  const subscribe = observer => {
+    if(subscription && subscription.hasObservers()) {
+      return subscription.subscribe(observer)
+    }
+
+    subscription = createSubscription()
+    const unsubscribe = subscription.subscribe(observer)
+
+    const sink = {
+      hasObservers: subscription.hasObservers,
+      sendValue: subscription.sendValue,
+      sendError: subscription.sendError
+    }
+
+    runProducer(sink)
+    return unsubscribe
+  }
+
+  return subscribe
 }

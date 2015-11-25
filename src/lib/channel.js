@@ -58,7 +58,7 @@ export const subscribeChannel = signal => {
     unsubscribe()
 
     if(pendingResolve) {
-      const [ resolve, reject ] = pendingResolve
+      const [, reject ] = pendingResolve
       reject(new Error('channel closed'))
       pendingResolve = null
     }

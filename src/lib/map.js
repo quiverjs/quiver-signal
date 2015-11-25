@@ -1,11 +1,9 @@
 import { equals } from './util'
-import { createSubscription } from './subscribe'
-import { subscribeGenerator } from './generator'
 import { subscribeChannel } from './channel'
+import { subscribeGenerator } from './generator'
+import { managedSubscription } from './subscribe'
 
 export const mapSignal = (signal, mapper) => {
-  const subscription = createSubscription()
-
   let lastValue = signal.currentValue()
   let lastMappedValue = mapper(lastValue)
 
@@ -56,11 +54,7 @@ export const mapSignal = (signal, mapper) => {
     }
   }
 
-  let pipeRunning = false
-  const pipeMap = () => {
-    if(pipeRunning) return
-    pipeRunning = true
-
+  const subscribe = managedSubscription(subscription => {
     signal::subscribeGenerator(function*() {
       while(subscription.hasObservers()) {
         try {
@@ -72,19 +66,8 @@ export const mapSignal = (signal, mapper) => {
           subscription.sendError(err)
         }
       }
-
-      pipeRunning = false
     })
-  }
-
-  const subscribe = observer => {
-    const unsubscribe = subscription.subscribe(observer)
-    if(!pipeRunning) {
-      pipeMap()
-    }
-
-    return unsubscribe
-  }
+  })
 
   const mappedSignal = {
     isQuiverSignal: true,
