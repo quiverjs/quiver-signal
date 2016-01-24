@@ -14,13 +14,9 @@ export const valueSignal = (initialValue) => {
     return currentValue
   }
 
-  const getCurrentError = () => {
-    return currentError
-  }
-
-  const getNextValue = () =>
-    new Promise((resolve, reject) => {
-      nextResolvers.push({resolve, reject})
+  const waitNext = () =>
+    new Promise(resolve => {
+      nextResolvers.push(resolve)
     })
 
   const setValue = async function(newValue) {
@@ -31,7 +27,7 @@ export const valueSignal = (initialValue) => {
     currentError = null
 
     for(let resolver of nextResolvers) {
-      resolver.resolve(newValue)
+      resolver()
     }
     nextResolvers = []
 
@@ -46,7 +42,7 @@ export const valueSignal = (initialValue) => {
     currentError = newError
 
     for(let resolver of nextResolvers) {
-      resolver.reject(newError)
+      resolver()
     }
     nextResolvers = []
 
@@ -60,8 +56,7 @@ export const valueSignal = (initialValue) => {
   const signal = {
     isQuiverSignal: true,
     currentValue: getCurrentValue,
-    currentError: getCurrentError,
-    nextValue: getNextValue,
+    waitNext,
     subscribe
   }
 

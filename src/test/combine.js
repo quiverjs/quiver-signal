@@ -20,9 +20,9 @@ test('combine signal test', assert => {
       { foo: 'foo', bar: 'bar' })
 
     fooSetter.setValue('food')
-    const nextValue = await signal.nextValue()
+    await signal.waitNext()
 
-    assert.deepEqual(nextValue.toObject(),
+    assert.deepEqual(signal.currentValue().toObject(),
       { foo: 'food', bar: 'bar' })
 
     const channel = subscribeChannel(signal)

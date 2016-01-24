@@ -14,15 +14,13 @@ test('signal channel test', assert => {
 
     setter.setValue('bar')
 
-    assert.equal(await mappedSignal.nextValue(), 'BAR')
+    await mappedSignal.waitNext()
     assert.equal(mappedSignal.currentValue(), 'BAR')
 
-    setter.setValue('Bar')
-    setter.setValue('BaR')
     setter.setValue('baz')
 
-    assert.equal(await mappedSignal.nextValue(), 'BAZ',
-      'should ignore mapped value that are same as previous')
+    await mappedSignal.waitNext()
+    assert.equal(await mappedSignal.currentValue(), 'BAZ')
 
     assert.end()
   })
@@ -63,7 +61,7 @@ test('signal channel test', assert => {
     assert.equal(await channel.nextValue(), 'BAR')
 
     setter.setValue(null)
-    assert.equal(await mappedSignal.nextValue(), null)
+    assert.equal(await channel.nextValue(), null)
 
     assert.end()
   })

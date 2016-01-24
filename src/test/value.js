@@ -10,7 +10,6 @@ test('value signal test', assert => {
     const [signal, setter] = valueSignal('foo')
 
     assert.equal(signal.currentValue(), 'foo')
-    assert.equal(signal.currentError(), null)
 
     setter.setValue('bar')
     assert.equal(signal.currentValue(), 'foo',
@@ -27,7 +26,6 @@ test('value signal test', assert => {
     const [signal, setter] = valueSignal('foo')
 
     assert.equal(signal.currentValue(), 'foo')
-    assert.equal(signal.currentError(), null)
 
     setter.setValue('bar')
     setter.setValue('baz')
@@ -42,34 +40,32 @@ test('value signal test', assert => {
     assert.end()
   })
 
-  assert::asyncTest('next value 1', async function(assert) {
+  assert::asyncTest('wait value 1', async function(assert) {
     const [signal, setter] = valueSignal('foo')
 
     assert.equal(signal.currentValue(), 'foo')
-    assert.equal(signal.currentError(), null)
 
-    const promise = signal.nextValue()
+    const promise = signal.waitNext()
 
     await timeout(10)
     setter.setValue('bar')
 
-    const newValue = await promise
-    assert.equal(newValue, 'bar',
+    await promise
+    assert.equal(signal.currentValue(), 'bar',
       'should resolve to new value')
 
     assert.end()
   })
 
-  assert::asyncTest('next value 2', async function(assert) {
+  assert::asyncTest('wait value 2', async function(assert) {
     const [signal, setter] = valueSignal('foo')
 
     assert.equal(signal.currentValue(), 'foo')
-    assert.equal(signal.currentError(), null)
 
     setter.setValue('bar')
 
-    const newValue = await signal.nextValue()
-    assert.equal(newValue, 'bar',
+    await signal.waitNext()
+    assert.equal(signal.currentValue(), 'bar',
       'should capture previous setter value within the same tick')
 
     assert.end()
@@ -79,26 +75,13 @@ test('value signal test', assert => {
     const [signal, setter] = valueSignal('foo')
 
     assert.equal(signal.currentValue(), 'foo')
-    assert.equal(signal.currentError(), null)
 
     setter.setValue('bar')
     setter.setValue('baz')
 
-    const value2 = await signal.nextValue()
-    assert.equal(value2, 'bar',
-      'should capture previous setter value within the same tick')
-
+    await signal.waitNext()
     assert.equal(signal.currentValue(), 'baz',
       'should have changed current value to baz')
-
-    const promise = signal.nextValue()
-
-    await timeout(10)
-    setter.setValue('too late')
-
-    const value3 = await promise
-    assert.equal(value3, 'too late',
-      'should not able to capture baz')
 
     assert.end()
   })
@@ -183,7 +166,7 @@ test('value signal test', assert => {
     const [signal, setter] = valueSignal('foo')
 
     setter.setError(new Error('error'))
-    await assert::rejected(signal.nextValue())
+    await signal.waitNext()
 
     assert.throws(() => signal.currentValue())
 

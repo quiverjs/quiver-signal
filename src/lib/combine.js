@@ -1,5 +1,5 @@
 import {
-  isImmutableMap, isImmutableList
+  ImmutableMap, isImmutableMap, isImmutableList
 } from 'quiver-util/immutable'
 
 import { assertSignal } from './util'
@@ -27,38 +27,28 @@ export const combineSignals = (signalMap) => {
     signalMap.map(signal =>
       signal.currentValue())
 
-  const getCurrentError = () => {
-    const errorMap = signalMap.map(signal =>
-      signal.currentError())
-
-    return errorMapToError(errorMap)
-  }
-
-  const getNextValue = async function() {
-    const currentValue = getCurrentValue()
-
-    return new Promise((resolve, reject) => {
-      for(let [key, signal] of signalMap.entries()) {
-        signal.nextValue()
-        .then(value => {
-          const newValue = currentValue.set(key, value)
-          resolve(newValue)
-        }, reject)
+  const waitNext = () =>
+    new Promise(resolve => {
+      for(let signal of signalMap.values()) {
+        signal.waitNext().then(resolve)
       }
     })
-  }
 
   const subscribe = managedSubscription(subscription => {
-    let valueMap = signalMap.map(signal => {
-      try {
-        return signal.currentValue()
-      } catch(err) {
-        return null
-      }
-    })
+    let valueMap = ImmutableMap()
+    let errorMap = ImmutableMap()
 
-    let errorMap = signalMap.map(signal =>
-      signal.currentError())
+    for(let [key, signal] of signalMap.entries()) {
+      try {
+        const value = signal.currentValue()
+        valueMap = valueMap.set(key, value)
+        errorMap = errorMap.set(key, null)
+
+      } catch(err) {
+        valueMap = valueMap.set(key, null)
+        errorMap = errorMap.set(key, err)
+      }
+    }
 
     const updateValue = (key, value, error) => {
       valueMap = valueMap.set(key, value)
@@ -93,8 +83,7 @@ export const combineSignals = (signalMap) => {
   const combinedSignal = {
     isQuiverSignal: true,
     currentValue: getCurrentValue,
-    currentError: getCurrentError,
-    nextValue: getNextValue,
+    waitNext,
     subscribe
   }
 
