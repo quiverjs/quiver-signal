@@ -1,9 +1,9 @@
 import { equals } from './util'
 import { createSubscription } from './subscribe'
 
-export const valueSignal = (initialValue) => {
-  let currentValue = initialValue
-  let currentError = null
+export const createSignal = (options={}) => {
+  let currentValue = options.initialValue
+  let currentError = options.initialError
 
   let nextResolvers = []
   const subscription = createSubscription()
@@ -66,3 +66,6 @@ export const valueSignal = (initialValue) => {
 
   return [signal, setter]
 }
+
+export const valueSignal = initialValue =>
+  createSignal({ initialValue })

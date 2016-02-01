@@ -9,7 +9,7 @@ export const createSubscription = () => {
 
   const subscribe = observer => {
     observers.add(observer)
-    
+
     const unsubscribe = wrapCallOnce(() => {
       observers.delete(observer)
 
@@ -20,7 +20,6 @@ export const createSubscription = () => {
   }
 
   const sendValueToObserver = async function(observer, value) {
-    await Promise.resolve()
     if(!observers.has(observer)) return
 
     try {
@@ -35,7 +34,6 @@ export const createSubscription = () => {
 
   const sendErrorToObserver = async function(observer, error) {
     if(!observer.throw) return
-    await Promise.resolve()
     if(!observers.has(observer)) return
 
     try {
