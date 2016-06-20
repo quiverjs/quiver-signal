@@ -12,12 +12,12 @@
     "url": "git@github.com:quiverjs/quiver-signal.git"
   },
   "dependencies": {
-    "quiver-util": "^1.2.0"
+    "quiver-util": "^1.2.1"
   },
   "devDependencies": {
-    "tape": "^4.2.2",
-    "babel-cli": "^6.1.2",
-    "quiver-babel": "~1.0.0"
+    "babel-cli": "^6.10.1",
+    "quiver-babel": "^1.0.1",
+    "tape": "^4.5.1"
   },
   "bugs": {
     "url": "https://github.com/quiverjs/quiver-signal/issues",
@@ -30,6 +30,6 @@
     "prepublish": "make build"
   },
   "engines": {
-    "node": "^5.0.0"
+    "node": "^6.2.2"
   }
 }
