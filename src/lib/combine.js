@@ -6,20 +6,18 @@ import { assertSignal } from './util'
 import { subscribeGenerator } from './generator'
 import { createSubscription } from './subscribe'
 
+class CompositeError extends Error {
+  constructor(errorMap) {
+    super('error in signal combine')
+    this.errorMap = errorMap
+  }
+}
+
 const errorMapToError = errorMap => {
   const hasError = errorMap.find(err => !!err)
   if(!hasError) return null
 
-  const error = new Error('error in signal combine')
-  error.errorMap = errorMap
-  return error
-}
-
-class CompositeError extends Error {
-  constructor(errorMap) {
-    super()
-    this.errorMap = errorMap
-  }
+  return new CompositeError(errorMap)
 }
 
 export const signalMapToValues = signalMap => {
@@ -45,28 +43,35 @@ export const signalMapToValues = signalMap => {
 export const subscribeSignalMap = (subscription, signalMap) => {
   let valueMap = ImmutableMap()
   let errorMap = ImmutableMap()
+  let sentError = null
 
   for(let [key, signal] of signalMap.entries()) {
     try {
       const value = signal.currentValue()
       valueMap = valueMap.set(key, value)
-      errorMap = errorMap.set(key, null)
+      errorMap = errorMap.delete(key)
 
     } catch(err) {
-      valueMap = valueMap.set(key, null)
+      valueMap = valueMap.delete(key)
       errorMap = errorMap.set(key, err)
     }
   }
 
   const updateValue = (key, value, error) => {
-    valueMap = valueMap.set(key, value)
-    errorMap = errorMap.set(key, error)
-
-    const combinedError = errorMapToError(errorMap)
-    if(combinedError) {
-      subscription.sendError(combinedError)
+    if(error) {
+      valueMap = valueMap.delete(key)
+      errorMap = errorMap.set(key, error)
     } else {
+      valueMap = valueMap.set(key, value)
+      errorMap = errorMap.delete(key)
+    }
+
+    if(errorMap.size == 0) {
+      sentError = null
       subscription.sendValue(valueMap)
+    } else if(!errorMap.equals(sentError)) {
+      sentError = errorMap
+      subscription.sendError(new CompositeError(errorMap))
     }
   }
 

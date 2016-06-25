@@ -1,15 +1,16 @@
 import { resolveAny } from 'quiver-core/util/promise'
 import { immutableMap } from 'quiver-core/util/immutable'
 
-import { safeValue, equals } from './util'
 import { valueSignal } from './value'
+import { safeValue, equals } from './util'
+import { subscribeGenerator } from './generator'
 import {
   signalMapToValues, waitSignalMap,
   subscribeSignalMap
 } from './combine'
 
 const subscribeSignalSignalMap = (subscription, signalSignalMap) => {
-  signalSignalMap.subscribeGenerator(function*() {
+  signalSignalMap::subscribeGenerator(function*() {
     let unsubscribe = null
     const unsubscribePreviousMap = (newUnsubscribe = null) => {
       if(!unsubscribe) return
@@ -20,7 +21,7 @@ const subscribeSignalSignalMap = (subscription, signalSignalMap) => {
     while(subscription.hasObservers()) {
       try {
         const signalMap = yield
-        const newUnsubscribe = subscribeSignalMap(subscribeSignalMap, signalMap)
+        const newUnsubscribe = subscribeSignalMap(signalMap, signalMap)
         unsubscribePreviousMap(newUnsubscribe)
       } catch(err) {
         unsubscribePreviousMap()
@@ -38,11 +39,12 @@ export const flattenSignal = signalSignalMap => {
   }
 
   const waitNext = async () => {
-    const nextSignalMap = signalSignalMap.waitNext()
-    const [err, signalMap] = signalSignalMap::safeValue()
-    if(err) return nextSignalMap
+    const nextSignalMapPromise = signalSignalMap.waitNext()
 
-    return resolveAny(nextSignalMap, waitSignalMap(signalMap))
+    const [err, signalMap] = signalSignalMap::safeValue()
+    if(err) return nextSignalMapPromise
+
+    return resolveAny(nextSignalMapPromise, waitSignalMap(signalMap))
   }
 
   const subscribe = observer => {

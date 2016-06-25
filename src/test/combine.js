@@ -95,4 +95,45 @@ test('combine signal test', assert => {
 
     fooSetter.setValue('food')
   })
+
+  assert.test('error test', assert => {
+    const [fooSignal, fooSetter] = valueSignal('foo')
+    const [barSignal, barSetter] = valueSignal('bar')
+
+    const signalMap = ImmutableMap()
+      .set('foo', fooSignal)
+      .set('bar', barSignal)
+
+    const combinedSignal = combineSignals(signalMap)
+
+    combinedSignal::subscribeGenerator(function*() {
+      const map1 = yield
+      assert.equal(map1.get('foo'), 'food')
+      assert.equal(map1.get('bar'), 'bar')
+
+      try {
+        yield
+        assert.fail('should throw error')
+      } catch(err) {
+        const { errorMap } = err
+
+        assert.ok(errorMap)
+        assert.equal(errorMap.size, 1)
+        assert.equal(errorMap.get('foo'), 'foo error')
+      }
+
+      const map2 = yield
+      assert.equal(map2.get('bar'), 'beer')
+      assert.equal(map2.get('foo'), 'fool',
+        'should get both update at same time, because bar ' +
+        'is set during foo value is error')
+
+      assert.end()
+    })
+
+    fooSetter.setValue('food')
+    fooSetter.setError('foo error')
+    barSetter.setValue('beer')
+    fooSetter.setValue('fool')
+  })
 })
