@@ -1,10 +1,9 @@
 import { valueSignal } from './value'
 import { subscribeGenerator } from './generator'
+import { subscribeChannel } from './channel'
 
 // foldp :: Signal a -> (b -> a -> b) -> b -> Signal b
-export const foldpSignal = (targetSignal, folder, acc, options={}) => {
-  const { errorHandler } = options
-
+export const foldpSignal = (targetSignal, folder, acc, errorHandler) => {
   const [foldedSignal, setter] = valueSignal(acc)
 
   const raiseError = err => {
@@ -12,38 +11,49 @@ export const foldpSignal = (targetSignal, folder, acc, options={}) => {
     throw err
   }
 
-  const handleError = !errorHandler ? raiseError :
-    err => {
-      try {
-        acc = errorHandler(err)
-        setter.setValue(acc)
-      } catch(err) {
-        raiseError(err)
-      }
+  const recoverError = err => {
+    try {
+      acc = errorHandler(err, acc)
+      setter.setValue(acc)
+    } catch(err) {
+      raiseError(err)
     }
+  }
+
+  const handleError = errorHandler ? recoverError : raiseError
 
   const doFold = value => {
-    acc = folder(acc, value)
-    setter.setValue(acc)
+    try {
+      acc = folder(acc, value)
+      setter.setValue(acc)
+    } catch(err) {
+      raiseError(err)
+    }
   }
 
-  // perform folding on initial value,
-  // also handle error on current value
-  try {
-    const initialValue = targetSignal.currentValue()
+  ;(() => {
+    let initialValue
+    try {
+      initialValue = targetSignal.currentValue()
+    } catch(err) {
+      handleError(err)
+      return
+    }
+
     doFold(initialValue)
-  } catch(err) {
-    handleError(err)
-  }
+  })()
 
   targetSignal::subscribeGenerator(function*() {
     while(true) {
+      let value
       try {
-        const value = yield
-        doFold(value)
+        value = yield
       } catch(err) {
         handleError(err)
+        continue
       }
+
+      doFold(value)
     }
   })
 
