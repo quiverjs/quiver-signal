@@ -1,27 +1,44 @@
-import { resolveAny } from 'quiver-core/util/promise'
-import { immutableMap } from 'quiver-core/util/immutable'
+import { resolveAny } from 'quiver-util/promise'
+import { immutableMap } from 'quiver-util/immutable'
 
 import { valueSignal } from './value'
 import { safeValue, equals } from './util'
 import { subscribeGenerator } from './generator'
+import { createSubscription } from './subscribe'
 import {
   signalMapToValues, waitSignalMap,
   subscribeSignalMap
 } from './combine'
 
 const subscribeSignalSignalMap = (subscription, signalSignalMap) => {
-  signalSignalMap::subscribeGenerator(function*() {
-    let unsubscribe = null
-    const unsubscribePreviousMap = (newUnsubscribe = null) => {
-      if(!unsubscribe) return
-      unsubscribe()
-      unsubscribe = null
-    }
+  let unsubscribe = null
+  const unsubscribePreviousMap = (newUnsubscribe = null) => {
+    if(!unsubscribe) return
 
+    unsubscribe()
+    unsubscribe = newUnsubscribe
+  }
+
+  try {
+    const signalMap = signalSignalMap.currentValue()
+    unsubscribe = subscribeSignalMap(subscription, signalMap)
+  } catch(err) {
+    // ignore
+  }
+
+  signalSignalMap::subscribeGenerator(function*() {
     while(subscription.hasObservers()) {
       try {
         const signalMap = yield
-        const newUnsubscribe = subscribeSignalMap(signalMap, signalMap)
+
+        try {
+          const valueMap = signalMapToValues(signalMap)
+          subscription.sendValue(valueMap)
+        } catch(err) {
+          subscription.sendError(err)
+        }
+
+        const newUnsubscribe = subscribeSignalMap(subscription, signalMap)
         unsubscribePreviousMap(newUnsubscribe)
       } catch(err) {
         unsubscribePreviousMap()
@@ -33,7 +50,7 @@ const subscribeSignalSignalMap = (subscription, signalSignalMap) => {
 
 // flattenSignal :: Signal (Map Signal a) -> Signal Map a
 export const flattenSignal = signalSignalMap => {
-  const getCurrentValue = () => {
+  const currentValue = () => {
     const signalMap = signalSignalMap.currentValue()
     return signalMapToValues(signalMap)
   }
@@ -50,7 +67,14 @@ export const flattenSignal = signalSignalMap => {
   const subscribe = observer => {
       const subscription = createSubscription()
       const unsubscribe =  subscription.subscribe(observer)
-      subscribeSignalMap(subscription, signalMap)
+      subscribeSignalSignalMap(subscription, signalSignalMap)
       return unsubscribe
+  }
+
+  return {
+    isQuiverSignal: true,
+    currentValue,
+    waitNext,
+    subscribe
   }
 }

@@ -41,6 +41,11 @@ export const signalMapToValues = signalMap => {
 }
 
 export const subscribeSignalMap = (subscription, signalMap) => {
+  let unsubscribed = false
+  const unsubscribe = () => {
+    unsubscribed = true
+  }
+
   let valueMap = ImmutableMap()
   let errorMap = ImmutableMap()
   let sentError = null
@@ -57,14 +62,8 @@ export const subscribeSignalMap = (subscription, signalMap) => {
     }
   }
 
-  const updateValue = (key, value, error) => {
-    if(error) {
-      valueMap = valueMap.delete(key)
-      errorMap = errorMap.set(key, error)
-    } else {
-      valueMap = valueMap.set(key, value)
-      errorMap = errorMap.delete(key)
-    }
+  const sendUpdate = () => {
+    if(unsubscribed) return
 
     if(errorMap.size == 0) {
       sentError = null
@@ -75,14 +74,27 @@ export const subscribeSignalMap = (subscription, signalMap) => {
     }
   }
 
+  const updateValue = (key, value) => {
+    valueMap = valueMap.set(key, value)
+    errorMap = errorMap.delete(key)
+    sendUpdate()
+  }
+
+  const updateError = (key, error) => {
+    valueMap = valueMap.delete(key)
+    errorMap = errorMap.set(key, error)
+    sendUpdate()
+  }
+
   const pipeSignal = (key, signal) => {
     signal::subscribeGenerator(function*() {
-      while(subscription.hasObservers()) {
+      while(subscription.hasObservers() && !unsubscribed) {
         try {
           const value = yield
-          updateValue(key, value, null)
+          updateValue(key, value)
+
         } catch(err) {
-          updateValue(key, null, err)
+          updateError(key, err)
         }
       }
     })
@@ -91,6 +103,8 @@ export const subscribeSignalMap = (subscription, signalMap) => {
   for(let [key, signal] of signalMap.entries()) {
     pipeSignal(key, signal)
   }
+
+  return unsubscribe
 }
 
 export const waitSignalMap = signalMap =>
