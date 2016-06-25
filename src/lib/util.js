@@ -3,6 +3,15 @@ export const assertSignal = signal => {
     throw new TypeError('object must be a quiver signal')
 }
 
+export const safeValue = function() {
+  try {
+    const value = this.currentValue()
+    return [null, value]
+  } catch(err) {
+    return [err, null]
+  }
+}
+
 export const equals = (value1, value2) => {
   if(value1 === value2)
     return true

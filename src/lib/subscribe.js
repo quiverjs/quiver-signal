@@ -9,7 +9,7 @@ export const createSubscription = () => {
 
   const subscribe = observer => {
     observers.add(observer)
-    
+
     const unsubscribe = wrapCallOnce(() => {
       observers.delete(observer)
 

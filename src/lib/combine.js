@@ -4,7 +4,7 @@ import {
 
 import { assertSignal } from './util'
 import { subscribeGenerator } from './generator'
-import { managedSubscription } from './subscribe'
+import { createSubscription } from './subscribe'
 
 const errorMapToError = errorMap => {
   const hasError = errorMap.find(err => !!err)
@@ -15,6 +15,86 @@ const errorMapToError = errorMap => {
   return error
 }
 
+class CompositeError extends Error {
+  constructor(errorMap) {
+    super()
+    this.errorMap = errorMap
+  }
+}
+
+export const signalMapToValues = signalMap => {
+  let errors = ImmutableMap()
+  let values = ImmutableMap()
+
+  for(const [key, signal] of signalMap.entries()) {
+    try {
+      const value = signal.currentValue()
+      values = values.set(key, value)
+    } catch(err) {
+      errors = errors.set(key, err)
+    }
+  }
+
+  if(errors.size > 0) {
+    throw new CompositeError(errors)
+  }
+
+  return values
+}
+
+export const subscribeSignalMap = (subscription, signalMap) => {
+  let valueMap = ImmutableMap()
+  let errorMap = ImmutableMap()
+
+  for(let [key, signal] of signalMap.entries()) {
+    try {
+      const value = signal.currentValue()
+      valueMap = valueMap.set(key, value)
+      errorMap = errorMap.set(key, null)
+
+    } catch(err) {
+      valueMap = valueMap.set(key, null)
+      errorMap = errorMap.set(key, err)
+    }
+  }
+
+  const updateValue = (key, value, error) => {
+    valueMap = valueMap.set(key, value)
+    errorMap = errorMap.set(key, error)
+
+    const combinedError = errorMapToError(errorMap)
+    if(combinedError) {
+      subscription.sendError(combinedError)
+    } else {
+      subscription.sendValue(valueMap)
+    }
+  }
+
+  const pipeSignal = (key, signal) => {
+    signal::subscribeGenerator(function*() {
+      while(subscription.hasObservers()) {
+        try {
+          const value = yield
+          updateValue(key, value, null)
+        } catch(err) {
+          updateValue(key, null, err)
+        }
+      }
+    })
+  }
+
+  for(let [key, signal] of signalMap.entries()) {
+    pipeSignal(key, signal)
+  }
+}
+
+export const waitSignalMap = signalMap =>
+  new Promise(resolve => {
+    for(let signal of signalMap.values()) {
+      signal.waitNext().then(resolve, resolve)
+    }
+  })
+
 export const combineSignals = (signalMap) => {
   if(!isImmutableMap(signalMap) && !isImmutableList(signalMap))
     throw new TypeError('entries must be immutable map/list')
@@ -24,61 +104,17 @@ export const combineSignals = (signalMap) => {
   }
 
   const getCurrentValue = () =>
-    signalMap.map(signal =>
-      signal.currentValue())
+    signalMapToValues(signalMap)
 
   const waitNext = () =>
-    new Promise(resolve => {
-      for(let signal of signalMap.values()) {
-        signal.waitNext().then(resolve)
-      }
-    })
+    waitSignalMap(signalMap)
 
-  const subscribe = managedSubscription(subscription => {
-    let valueMap = ImmutableMap()
-    let errorMap = ImmutableMap()
-
-    for(let [key, signal] of signalMap.entries()) {
-      try {
-        const value = signal.currentValue()
-        valueMap = valueMap.set(key, value)
-        errorMap = errorMap.set(key, null)
-
-      } catch(err) {
-        valueMap = valueMap.set(key, null)
-        errorMap = errorMap.set(key, err)
-      }
-    }
-
-    const updateValue = (key, value, error) => {
-      valueMap = valueMap.set(key, value)
-      errorMap = errorMap.set(key, error)
-
-      const combinedError = errorMapToError(errorMap)
-      if(combinedError) {
-        subscription.sendError(combinedError)
-      } else {
-        subscription.sendValue(valueMap)
-      }
-    }
-
-    const pipeSignal = (key, signal) => {
-      signal::subscribeGenerator(function*() {
-        while(subscription.hasObservers()) {
-          try {
-            const value = yield
-            updateValue(key, value, null)
-          } catch(err) {
-            updateValue(key, null, err)
-          }
-        }
-      })
-    }
-
-    for(let [key, signal] of signalMap.entries()) {
-      pipeSignal(key, signal)
-    }
-  })
+  const subscribe = observer => {
+      const subscription = createSubscription()
+      const unsubscribe = subscription.subscribe(observer)
+      subscribeSignalMap(subscription, signalMap)
+      return unsubscribe
+  }
 
   const combinedSignal = {
     isQuiverSignal: true,
