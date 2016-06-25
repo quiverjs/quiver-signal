@@ -3,7 +3,11 @@ import { ImmutableMap } from 'quiver-util/immutable'
 import { asyncTest } from 'quiver-util/tape'
 
 import { combineSignals } from '../lib/combine'
-import { valueSignal, subscribeChannel } from '../lib'
+import { subscribeGenerator } from '../lib/method'
+
+import {
+  valueSignal, subscribeChannel
+} from '../lib'
 
 test('combine signal test', assert => {
   assert::asyncTest('basic combine', async function(assert) {
@@ -42,5 +46,53 @@ test('combine signal test', assert => {
 
     channel.close()
     assert.end()
+  })
+
+  assert.test('race condition test', assert => {
+    const [fooSignal, fooSetter] = valueSignal('foo')
+    const [barSignal, barSetter] = valueSignal('bar')
+
+    const signalMap = ImmutableMap()
+      .set('foo', fooSignal)
+      .set('bar', barSignal)
+
+    const combinedSignal = combineSignals(signalMap)
+
+    let observedFoo = []
+
+    fooSignal::subscribeGenerator(function*() {
+      const newValue = yield
+      assert.equal(newValue, 'food')
+      assert.deepEqual(observedFoo, [])
+      assert.equal(combinedSignal.currentValue().get('foo'), 'food')
+
+      combinedSignal::subscribeGenerator(function*() {
+        const newValue = (yield).get('foo')
+
+        assert.equal(newValue, 'fool',
+          'combinedSignal.subscribe should subscribe based on current value ' +
+          'instead of piping old values from previous subscription')
+
+        assert.deepEqual(observedFoo, ['food', 'fool'],
+          'other subscriber should receieve the old value first ' +
+          'as per contract of signal subscription')
+
+        assert.end()
+      })
+
+      fooSetter.setValue('fool')
+    })
+
+    combinedSignal::subscribeGenerator(function*() {
+      const value1 = (yield).get('foo')
+      assert.equal(value1, 'food')
+      observedFoo.push(value1)
+
+      const value2 = (yield).get('foo')
+      assert.equal(value2, 'fool')
+      observedFoo.push(value2)
+    })
+
+    fooSetter.setValue('food')
   })
 })
