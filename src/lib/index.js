@@ -1,8 +1,14 @@
-export { valueSignal } from './value'
-export { handleSignalError } from './error'
-export { createSubscription } from './subscribe'
-export { generatorObserver } from './generator'
 export { subscribeChannel } from './channel'
-export { mapSignal } from './map'
+export { combineSignals } from './combine'
+export { handleSignalError } from './error'
+export { flattenSignal } from './flatten'
 export { foldpSignal } from './foldp'
-export { assertSignal } from './util'
+export { generatorObserver } from './generator'
+export { mapSignal } from './map'
+export { createSubscription, managedSubscription } from './subscribe'
+
+export {
+  assertSignal, safeValue, safeNextValue, equals
+} from './util'
+
+export { createSignal, valueSignal } from './value'

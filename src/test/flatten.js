@@ -2,8 +2,7 @@ import test from 'tape'
 import { ImmutableMap } from 'quiver-util/immutable'
 import { asyncTest } from 'quiver-util/tape'
 
-import { valueSignal } from '../lib/value'
-import { flattenSignal } from '../lib/flatten'
+import { valueSignal, flattenSignal } from '../lib'
 import { subscribeChannel } from '../lib/method'
 
 test('flatten signal test', assert => {

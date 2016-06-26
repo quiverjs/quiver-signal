@@ -2,11 +2,12 @@ import test from 'tape'
 import { ImmutableMap } from 'quiver-util/immutable'
 import { asyncTest } from 'quiver-util/tape'
 
-import { combineSignals } from '../lib/combine'
-import { subscribeGenerator } from '../lib/method'
+import {
+  subscribeGenerator, subscribeChannel
+} from '../lib/method'
 
 import {
-  valueSignal, subscribeChannel
+  valueSignal, combineSignals
 } from '../lib'
 
 test('combine signal test', assert => {
@@ -29,7 +30,7 @@ test('combine signal test', assert => {
     assert.deepEqual(signal.currentValue().toObject(),
       { foo: 'food', bar: 'bar' })
 
-    const channel = subscribeChannel(signal)
+    const channel = signal::subscribeChannel()
 
     barSetter.setValue('beer')
     fooSetter.setValue('fool')

@@ -4,8 +4,6 @@ import { asyncTest, rejected } from 'quiver-util/tape'
 import { valueSignal, subscribeChannel } from '../lib'
 import { foldp, handleError } from '../lib/method'
 
-import { testError } from './util'
-
 test('foldp signal test', assert => {
   assert::asyncTest('sum signal', async function(assert) {
     const [signal, setter] = valueSignal(1)
@@ -70,7 +68,7 @@ test('foldp signal test', assert => {
     const channel = subscribeChannel(sumSignal)
 
     setter.setValue(2)
-    setter.setError(testError('test error'))
+    setter.setError(new Error('test error'))
     setter.setValue(3)
     setter.setValue(4)
 
@@ -93,7 +91,7 @@ test('foldp signal test', assert => {
       ::foldp(
         (prev, divisor) => {
           if(divisor == 0)
-            throw testError('division by zero')
+            throw new Error('division by zero')
 
           return prev / divisor
 
@@ -105,7 +103,7 @@ test('foldp signal test', assert => {
     const channel = subscribeChannel(divideSignal)
 
     setter.setValue(2)
-    setter.setError(testError('test error'))
+    setter.setError(new Error('test error'))
     setter.setValue(4)
     setter.setValue(0)
     setter.setValue(10)
