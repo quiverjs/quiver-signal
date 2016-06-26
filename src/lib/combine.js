@@ -17,7 +17,7 @@ export const uniqueErrorSink = subscription => {
   let sentErrorMap = null
 
   const sendErrorMap = errorMap => {
-    if(errorMap && errorMap.equals(sentErrorMap)) return
+    if(errorMap.equals(sentErrorMap)) return
 
     sentErrorMap = errorMap
     subscription.sendError(new CompositeError(errorMap))

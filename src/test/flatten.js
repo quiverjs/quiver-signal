@@ -107,6 +107,30 @@ test('flatten signal test', assert => {
     },
     'all updates should be sent at once only after error is recovered')
 
+    signalMapSetter.setError('map error')
+    bazSetter.setValue('bazaar')
+
+    try {
+      await channel.nextValue()
+      assert.fail('should raise error')
+    } catch(err) {
+      assert.equal(err, 'map error')
+    }
+
+    const signalMap3 = signalMap2.delete('bar')
+    signalMapSetter.setValue(signalMap3)
+
+    const map3 = await channel.nextValue()
+    assert.deepEqual(map3.toObject(), {
+      foo: 'fool',
+      baz: 'bazaar'
+    })
+
+    assert.deepEqual(flattenedSignal.currentValue().toObject(), {
+      foo: 'fool',
+      baz: 'bazaar'
+    })
+
     assert.end()
   })
 })
