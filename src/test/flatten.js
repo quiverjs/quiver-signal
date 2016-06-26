@@ -6,8 +6,6 @@ import { valueSignal } from '../lib/value'
 import { flattenSignal } from '../lib/flatten'
 import { subscribeChannel } from '../lib/method'
 
-import { testError } from './util'
-
 test('flatten signal test', assert => {
   assert::asyncTest('basic flatten', async assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')

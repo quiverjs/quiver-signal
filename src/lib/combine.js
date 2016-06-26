@@ -13,6 +13,37 @@ class CompositeError extends Error {
   }
 }
 
+export const uniqueErrorSink = subscription => {
+  let sentErrorMap = null
+
+  const sendErrorMap = errorMap => {
+    if(errorMap && errorMap.equals(sentErrorMap)) return
+
+    sentErrorMap = errorMap
+    subscription.sendError(new CompositeError(errorMap))
+  }
+
+  const sendError = err => {
+    const { errorMap } = err
+    if(errorMap && errorMap.equals(sentErrorMap)) return
+
+    sentErrorMap = errorMap
+    subscription.sendError(err)
+  }
+
+  const sendValue = valueMap => {
+    sentErrorMap = null
+    subscription.sendValue(valueMap)
+  }
+
+  return {
+    hasObservers: subscription.hasObservers,
+    sendValue,
+    sendError,
+    sendErrorMap
+  }
+}
+
 export const signalMapToValues = signalMap => {
   let errors = ImmutableMap()
   let values = ImmutableMap()
@@ -33,7 +64,7 @@ export const signalMapToValues = signalMap => {
   return values
 }
 
-export const subscribeSignalMap = (subscription, signalMap) => {
+export const subscribeSignalMap = (subscriptionSink, signalMap) => {
   let unsubscribed = false
   const unsubscribe = () => {
     unsubscribed = true
@@ -42,19 +73,6 @@ export const subscribeSignalMap = (subscription, signalMap) => {
   let valueMap = ImmutableMap()
   let errorMap = ImmutableMap()
 
-  let sentError = null
-  const sendError = errorMap => {
-    if(errorMap.equals(sentError)) return
-
-    sentError = errorMap
-    subscription.sendError(new CompositeError(errorMap))
-  }
-
-  const sendValue = valueMap => {
-    sentError = null
-    subscription.sendValue(valueMap)
-  }
-  
   for(let [key, signal] of signalMap.entries()) {
     try {
       const value = signal.currentValue()
@@ -71,9 +89,9 @@ export const subscribeSignalMap = (subscription, signalMap) => {
     if(unsubscribed) return
 
     if(errorMap.size == 0) {
-      sendValue(valueMap)
+      subscriptionSink.sendValue(valueMap)
     } else {
-      sendError(errorMap)
+      subscriptionSink.sendErrorMap(errorMap)
     }
   }
 
@@ -91,7 +109,7 @@ export const subscribeSignalMap = (subscription, signalMap) => {
 
   const pipeSignal = (key, signal) => {
     signal::subscribeGenerator(function*() {
-      while(subscription.hasObservers() && !unsubscribed) {
+      while(subscriptionSink.hasObservers() && !unsubscribed) {
         try {
           const value = yield
           updateValue(key, value)
@@ -134,7 +152,8 @@ export const combineSignals = (signalMap) => {
   const subscribe = observer => {
       const subscription = createSubscription()
       const unsubscribe = subscription.subscribe(observer)
-      subscribeSignalMap(subscription, signalMap)
+
+      subscribeSignalMap(uniqueErrorSink(subscription), signalMap)
       return unsubscribe
   }
 
