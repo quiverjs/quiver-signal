@@ -42,5 +42,9 @@ const maybeMapper = mapper =>
   }
 
 export const map = function(mapper) {
+  return mapSignal(this, mapper)
+}
+
+export const maybeMap = function(mapper) {
   return mapSignal(this, maybeMapper(mapper))
 }

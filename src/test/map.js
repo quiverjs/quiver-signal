@@ -3,7 +3,7 @@ import { timeout } from 'quiver-util/promise'
 import { asyncTest, rejected } from 'quiver-util/tape'
 
 import { valueSignal, subscribeChannel } from '../lib'
-import { map } from '../lib/method'
+import { map, maybeMap } from '../lib/method'
 
 test('signal channel test', assert => {
   assert::asyncTest('current value map', async function(assert) {
@@ -45,7 +45,7 @@ test('signal channel test', assert => {
 
   assert::asyncTest('maybe mapper', async function(assert) {
     const [signal, setter] = valueSignal()
-    const mappedSignal = signal::map(str => str.toUpperCase())
+    const mappedSignal = signal::maybeMap(str => str.toUpperCase())
     const channel = subscribeChannel(mappedSignal)
 
     assert.equal(mappedSignal.currentValue(), null)
