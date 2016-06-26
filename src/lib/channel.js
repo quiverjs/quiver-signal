@@ -1,3 +1,4 @@
+import { methodfy } from 'quiver-util/function'
 import { generatorObserver } from './generator'
 
 const valueResolver = value =>
@@ -58,7 +59,7 @@ export const subscribeChannel = signal => {
     unsubscribe()
 
     if(pendingResolve) {
-      const [, reject ] = pendingResolve
+      const [, reject] = pendingResolve
       reject(new Error('channel closed'))
       pendingResolve = null
     }
@@ -71,3 +72,5 @@ export const subscribeChannel = signal => {
 
   return channel
 }
+
+export const subscribeChannelMethod = methodfy(subscribeChannel)
