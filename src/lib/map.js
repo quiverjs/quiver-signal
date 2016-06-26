@@ -1,4 +1,3 @@
-import { subscribeChannel } from './channel'
 import { subscribeGenerator } from './generator'
 import { managedSubscription } from './subscribe'
 

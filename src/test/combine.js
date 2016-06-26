@@ -50,7 +50,7 @@ test('combine signal test', assert => {
 
   assert.test('race condition test', assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
-    const [barSignal, barSetter] = valueSignal('bar')
+    const [barSignal] = valueSignal('bar')
 
     const signalMap = ImmutableMap()
       .set('foo', fooSignal)

@@ -13,13 +13,6 @@ class CompositeError extends Error {
   }
 }
 
-const errorMapToError = errorMap => {
-  const hasError = errorMap.find(err => !!err)
-  if(!hasError) return null
-
-  return new CompositeError(errorMap)
-}
-
 export const signalMapToValues = signalMap => {
   let errors = ImmutableMap()
   let values = ImmutableMap()

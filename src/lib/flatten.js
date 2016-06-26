@@ -1,8 +1,6 @@
 import { resolveAny } from 'quiver-util/promise'
-import { immutableMap } from 'quiver-util/immutable'
 
-import { valueSignal } from './value'
-import { safeValue, equals } from './util'
+import { safeValue } from './util'
 import { subscribeGenerator } from './generator'
 import { createSubscription } from './subscribe'
 import {

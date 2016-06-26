@@ -1,6 +1,6 @@
 import test from 'tape'
 import { timeout } from 'quiver-util/promise'
-import { asyncTest, rejected } from 'quiver-util/tape'
+import { asyncTest } from 'quiver-util/tape'
 
 import { valueSignal } from '../lib'
 import { subscribeGenerator } from '../lib/method'

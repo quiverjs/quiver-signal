@@ -1,6 +1,5 @@
 import { valueSignal } from './value'
 import { subscribeGenerator } from './generator'
-import { subscribeChannel } from './channel'
 
 // foldp :: Signal a -> (b -> a -> b) -> b -> Signal b
 export const foldpSignal = (targetSignal, folder, acc, errorHandler) => {
