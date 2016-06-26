@@ -17,11 +17,32 @@ const subscribeSignalSignalMap = (subscription, signalSignalMap) => {
     unsubscribe = newUnsubscribe
   }
 
+  let sentErrorMap = null
+  const sendError = err => {
+    const { errorMap } = err
+    if(errorMap && errorMap.equals(sentErrorMap)) return
+
+    sentErrorMap = errorMap
+    subscription.sendError(err)
+  }
+
+  const sendValue = valueMap => {
+    sentErrorMap = null
+    subscription.sendValue(valueMap)
+  }
+
+  const innerSink = {
+    hasObservers: subscription.hasObservers,
+    sendError,
+    sendValue
+  }
+
   try {
     const signalMap = signalSignalMap.currentValue()
-    unsubscribe = subscribeSignalMap(subscription, signalMap)
+    unsubscribe = subscribeSignalMap(innerSink, signalMap)
   } catch(err) {
-    // ignore
+    // ignore because the initial state is error state,
+    // which don't need to be updated in the subscription
   }
 
   signalSignalMap::subscribeGenerator(function*() {
@@ -31,9 +52,9 @@ const subscribeSignalSignalMap = (subscription, signalSignalMap) => {
 
         try {
           const valueMap = signalMapToValues(signalMap)
-          subscription.sendValue(valueMap)
+          sendValue(valueMap)
         } catch(err) {
-          subscription.sendError(err)
+          sendError(err)
         }
 
         const newUnsubscribe = subscribeSignalMap(subscription, signalMap)

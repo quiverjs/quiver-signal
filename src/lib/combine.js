@@ -41,8 +41,20 @@ export const subscribeSignalMap = (subscription, signalMap) => {
 
   let valueMap = ImmutableMap()
   let errorMap = ImmutableMap()
-  let sentError = null
 
+  let sentError = null
+  const sendError = errorMap => {
+    if(errorMap.equals(sentError)) return
+
+    sentError = errorMap
+    subscription.sendError(new CompositeError(errorMap))
+  }
+
+  const sendValue = valueMap => {
+    sentError = null
+    subscription.sendValue(valueMap)
+  }
+  
   for(let [key, signal] of signalMap.entries()) {
     try {
       const value = signal.currentValue()
@@ -59,11 +71,9 @@ export const subscribeSignalMap = (subscription, signalMap) => {
     if(unsubscribed) return
 
     if(errorMap.size == 0) {
-      sentError = null
-      subscription.sendValue(valueMap)
-    } else if(!errorMap.equals(sentError)) {
-      sentError = errorMap
-      subscription.sendError(new CompositeError(errorMap))
+      sendValue(valueMap)
+    } else {
+      sendError(errorMap)
     }
   }
 

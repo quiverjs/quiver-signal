@@ -12,6 +12,15 @@ export const safeValue = function() {
   }
 }
 
+export const safeNextValue = async function() {
+  try {
+    const value = await this.nextValue()
+    return [null, value]
+  } catch(err) {
+    return [err, null]
+  }
+}
+
 export const equals = (value1, value2) => {
   if(value1 === value2)
     return true

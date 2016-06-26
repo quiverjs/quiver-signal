@@ -4,11 +4,7 @@ import { asyncTest, rejected } from 'quiver-util/tape'
 import { valueSignal, subscribeChannel } from '../lib'
 import { foldp } from '../lib/method'
 
-const testError = message => {
-  const err = new Error(message)
-  err.isTestError = true
-  return err
-}
+import { testError } from './util'
 
 test('foldp signal test', assert => {
   assert::asyncTest('sum signal', async function(assert) {

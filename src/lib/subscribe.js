@@ -1,4 +1,4 @@
-import { wrapCallOnce } from './util'
+import { equals, wrapCallOnce } from './util'
 
 export const createSubscription = () => {
   const observers = new Set()
