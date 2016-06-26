@@ -1,4 +1,5 @@
 export { valueSignal } from './value'
+export { handleSignalError } from './error'
 export { createSubscription } from './subscribe'
 export { generatorObserver } from './generator'
 export { subscribeChannel } from './channel'
