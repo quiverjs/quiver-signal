@@ -69,3 +69,6 @@ export const createSignal = (options={}) => {
 
 export const valueSignal = initialValue =>
   createSignal({ initialValue })
+
+export const constantSignal = value =>
+  valueSignal(value)[0]

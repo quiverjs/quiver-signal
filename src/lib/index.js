@@ -12,4 +12,4 @@ export {
   assertSignal, safeValue, safeNextValue, equals
 } from './util'
 
-export { createSignal, valueSignal } from './value'
+export { createSignal, valueSignal, constantSignal } from './value'
