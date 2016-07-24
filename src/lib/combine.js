@@ -1,5 +1,5 @@
 import {
-  ImmutableMap, isImmutableMap, isImmutableList
+  isImmutableMap, isImmutableList
 } from 'quiver-util/immutable'
 
 import { assertSignal } from './util'
@@ -45,8 +45,8 @@ export const uniqueErrorSink = subscription => {
 }
 
 export const signalMapToValues = signalMap => {
-  let errors = ImmutableMap()
-  let values = ImmutableMap()
+  let errors = signalMap.clear()
+  let values = signalMap.clear()
 
   for(const [key, signal] of signalMap.entries()) {
     try {
@@ -70,8 +70,8 @@ export const subscribeSignalMap = (subscriptionSink, signalMap) => {
     unsubscribed = true
   }
 
-  let valueMap = ImmutableMap()
-  let errorMap = ImmutableMap()
+  let valueMap = signalMap.clear()
+  let errorMap = signalMap.clear()
 
   for(let [key, signal] of signalMap.entries()) {
     try {

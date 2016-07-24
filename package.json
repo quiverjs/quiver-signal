@@ -6,7 +6,7 @@
   },
   "name": "quiver-signal",
   "desription": "FRP signal type for Quiver front end",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "homepage": "https://github.com/quiverjs/quiver-signal",
   "repository": {
     "url": "git@github.com:quiverjs/quiver-signal.git"
