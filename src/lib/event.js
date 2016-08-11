@@ -10,3 +10,11 @@ export const eventSignal = () => {
 
   return [signal, eventHandler]
 }
+
+export const unitEventSignal = () => {
+  [signal, eventHandler] = eventSignal()
+
+  unitEventHandler = () => eventHandler(true)
+
+  return [signal, unitEventHandler]
+}

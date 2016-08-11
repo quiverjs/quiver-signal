@@ -1,7 +1,13 @@
+import { assertFunction } from 'quiver-util/assert'
+
+import { assertSignal } from './util'
 import { subscribeGenerator } from './generator'
 import { managedSubscription } from './subscribe'
 
 export const mapSignal = (targetSignal, mapper) => {
+  assertSignal(targetSignal)
+  assertFunction(mapper)
+
   const getCurrentValue = () => {
     const targetValue = targetSignal.currentValue()
     return mapper(targetValue)
@@ -46,5 +52,7 @@ export const map = function(mapper) {
 }
 
 export const maybeMap = function(mapper) {
+  assertFunction(mapper)
+
   return mapSignal(this, maybeMapper(mapper))
 }

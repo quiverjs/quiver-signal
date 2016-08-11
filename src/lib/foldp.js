@@ -1,8 +1,14 @@
+import { assertFunction } from 'quiver-util/assert'
+
+import { assertSignal } from './util'
 import { valueSignal } from './value'
 import { subscribeGenerator } from './generator'
 
 // foldp :: Signal a -> (b -> a -> b) -> b -> Signal b
 export const foldpSignal = (targetSignal, folder, acc) => {
+  assertSignal(targetSignal)
+  assertFunction(folder)
+
   const [foldedSignal, setter] = valueSignal(acc)
 
   const doFold = value => {
