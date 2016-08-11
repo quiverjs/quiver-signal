@@ -1,7 +1,7 @@
 export { subscribeChannel } from './channel'
 export { combineSignals } from './combine'
 export { handleSignalError } from './error'
-export { eventSignal } from './event'
+export { eventSignal, unitEventSignal } from './event'
 export { flattenSignal } from './flatten'
 export { foldpSignal } from './foldp'
 export { generatorObserver } from './generator'
