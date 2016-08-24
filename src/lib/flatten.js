@@ -60,7 +60,7 @@ export const flattenSignal = signalSignalMap => {
     const [err, signalMap] = signalSignalMap::safeValue()
     if(err) return nextSignalMapPromise
 
-    return resolveAny(nextSignalMapPromise, waitSignalMap(signalMap))
+    return resolveAny([nextSignalMapPromise, waitSignalMap(signalMap)])
   }
 
   const subscribe = observer => {

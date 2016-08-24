@@ -46,6 +46,7 @@ test('combine signal test', assert => {
       { foo: 'fool', bar: 'buzz' })
 
     channel.close()
+
     assert.end()
   })
 

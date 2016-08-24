@@ -129,9 +129,9 @@ export const subscribeSignalMap = (subscriptionSink, signalMap) => {
 }
 
 export const waitSignalMap = signalMap =>
-  new Promise(resolve => {
+  new Promise((resolve, reject) => {
     for(let signal of signalMap.values()) {
-      signal.waitNext().then(resolve, resolve)
+      signal.waitNext().then(resolve, reject)
     }
   })
 

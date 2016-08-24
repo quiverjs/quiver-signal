@@ -8,9 +8,24 @@ export const mapSignal = (targetSignal, mapper) => {
   assertSignal(targetSignal)
   assertFunction(mapper)
 
+  let lastTargetValue
+  let lastMappedValue
+
+  const doMap = targetValue => {
+    if(lastTargetValue && lastTargetValue === targetValue) {
+      return lastMappedValue
+    }
+
+    const mappedValue = mapper(targetValue)
+    lastTargetValue = targetValue
+    lastMappedValue = mappedValue
+
+    return mappedValue
+  }
+
   const getCurrentValue = () => {
     const targetValue = targetSignal.currentValue()
-    return mapper(targetValue)
+    return doMap(targetValue)
   }
 
   const subscribe = managedSubscription(subscription => {
@@ -19,7 +34,7 @@ export const mapSignal = (targetSignal, mapper) => {
         try {
           const value = yield
 
-          const mapped = mapper(value)
+          const mapped = doMap(value)
           subscription.sendValue(mapped)
         } catch(err) {
           subscription.sendError(err)
