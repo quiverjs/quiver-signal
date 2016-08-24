@@ -2,30 +2,30 @@ import test from 'tape'
 import { ImmutableMap } from 'quiver-util/immutable'
 import { asyncTest } from 'quiver-util/tape'
 
-import { valueSignal, flattenScsv } from '../lib'
+import { valueSignal, flattenScsa } from '../lib'
 import { subscribeChannel } from '../lib/method'
 
-// type C v = Container v
-// type CS v = Container Signal v
-// type SC v = Signal Container v
-// type SCS v = Signal Container Signal v
-// flattenScsv :: Signal Container Signal v -> Signal Container v
+// type C a = Container a
+// type CS a = Container Signal a
+// type SC a = Signal Container a
+// type SCS a = Signal Container Signal a
+// flattenScsa :: Signal Container Signal a -> Signal Container a
 test('flatten Signal Container Signal v', assert => {
   assert::asyncTest('basic flatten', async assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
     const [bazSignal, bazSetter] = valueSignal('baz')
 
-    // csv :: Container Signal v
-    const csv = ImmutableMap()
+    // csa :: Container Signal a
+    const csa = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    // scsv :: Signal Container Signal v
-    const [scsv, csvSetter] = valueSignal(csv)
+    // scsa :: Signal Container Signal a
+    const [scsa, csaSetter] = valueSignal(csa)
 
-    // flattenedSignal :: Signal Container v
-    const flattenedSignal = flattenScsv(scsv)
+    // flattenedSignal :: Signal Container a
+    const flattenedSignal = flattenScsa(scsa)
 
     const channel = flattenedSignal::subscribeChannel()
 
@@ -44,11 +44,11 @@ test('flatten Signal Container Signal v', assert => {
     assert.equal(map2.get('foo'), 'food')
     assert.equal(map2.get('bar'), 'beer')
 
-    const newCsv = ImmutableMap()
+    const newCsa = ImmutableMap()
       .set('foo', fooSignal)
       .set('baz', bazSignal)
 
-    csvSetter.setValue(newCsv)
+    csaSetter.setValue(newCsa)
 
     const map3 = await channel.nextValue()
     assert.equal(map3.get('foo'), 'food')
@@ -71,12 +71,12 @@ test('flatten Signal Container Signal v', assert => {
     const [barSignal, barSetter] = valueSignal('bar')
     const [bazSignal, bazSetter] = valueSignal('baz')
 
-    const csv = ImmutableMap()
+    const csa = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    const [scsv, csvSetter] = valueSignal(csv)
-    const flattenedSignal = flattenScsv(scsv)
+    const [scsa, csaSetter] = valueSignal(csa)
+    const flattenedSignal = flattenScsa(scsa)
 
     const channel = flattenedSignal::subscribeChannel()
 
@@ -102,8 +102,8 @@ test('flatten Signal Container Signal v', assert => {
 
     barSetter.setValue('beer')
 
-    const csv2 = csv.set('baz', bazSignal)
-    csvSetter.setValue(csv2)
+    const csa2 = csa.set('baz', bazSignal)
+    csaSetter.setValue(csa2)
 
     fooSetter.setValue('fool')
 
@@ -115,7 +115,7 @@ test('flatten Signal Container Signal v', assert => {
     },
     'all updates should be sent at once only after error is recovered')
 
-    csvSetter.setError('map error')
+    csaSetter.setError('map error')
     bazSetter.setValue('bazaar')
 
     try {
@@ -125,8 +125,8 @@ test('flatten Signal Container Signal v', assert => {
       assert.equal(err, 'map error')
     }
 
-    const csv3 = csv2.delete('bar')
-    csvSetter.setValue(csv3)
+    const csa3 = csa2.delete('bar')
+    csaSetter.setValue(csa3)
 
     const map3 = await channel.nextValue()
     assert.deepEqual(map3.toObject(), {

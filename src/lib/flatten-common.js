@@ -38,15 +38,15 @@ export const uniqueErrorSink = subscription => {
   }
 }
 
-// csvToCv :: Container Signal v -> Container v
-export const csvToCv = csv => {
+// csaToCv :: Container Signal a -> Container a
+export const csaToCv = csa => {
   // errors :: Container error
-  let errors = csv.clear()
+  let errors = csa.clear()
 
   // values :: Container value
-  let values = csv.clear()
+  let values = csa.clear()
 
-  for(const [key, signal] of csv.entries()) {
+  for(const [key, signal] of csa.entries()) {
     try {
       const value = signal.currentValue()
       values = values.set(key, value)
@@ -62,17 +62,17 @@ export const csvToCv = csv => {
   return values
 }
 
-// subscribeCsv :: SubscriptionSink -> Container Signal v -> ()
-export const subscribeCsv = (subscriptionSink, csv) => {
+// subscribeCsa :: SubscriptionSink -> Container Signal a -> ()
+export const subscribeCsa = (subscriptionSink, csa) => {
   let unsubscribed = false
   const unsubscribe = () => {
     unsubscribed = true
   }
 
-  let valueMap = csv.clear()
-  let errorMap = csv.clear()
+  let valueMap = csa.clear()
+  let errorMap = csa.clear()
 
-  for(let [key, signal] of csv.entries()) {
+  for(let [key, signal] of csa.entries()) {
     try {
       const value = signal.currentValue()
       valueMap = valueMap.set(key, value)
@@ -120,17 +120,17 @@ export const subscribeCsv = (subscriptionSink, csv) => {
     })
   }
 
-  for(let [key, signal] of csv.entries()) {
+  for(let [key, signal] of csa.entries()) {
     pipeSignal(key, signal)
   }
 
   return unsubscribe
 }
 
-// waitCsv :: Container Signal v -> Promise ()
-export const waitCsv = csv =>
+// waitCsa :: Container Signal a -> Promise ()
+export const waitCsa = csa =>
   new Promise((resolve, reject) => {
-    for(let signal of csv.values()) {
+    for(let signal of csa.values()) {
       signal.waitNext().then(resolve, reject)
     }
   })

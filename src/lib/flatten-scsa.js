@@ -4,12 +4,12 @@ import { safeValue } from './util'
 import { subscribeGenerator } from './generator'
 import { createSubscription } from './subscribe'
 import {
-  csvToCv, waitCsv,
-  subscribeCsv, uniqueErrorSink
+  csaToCv, waitCsa,
+  subscribeCsa, uniqueErrorSink
 } from './flatten-common'
 
-// subscribeScsv :: SubscriptionSink -> Signal Container Signal v -> ()
-const subscribeScsv = (subscriptionSink, scsv) => {
+// subscribeScsa :: SubscriptionSink -> Signal Container Signal a -> ()
+const subscribeScsa = (subscriptionSink, scsa) => {
   let unsubscribe = null
 
   const unsubscribePrevious = (newUnsubscribe) => {
@@ -21,28 +21,28 @@ const subscribeScsv = (subscriptionSink, scsv) => {
   }
 
   try {
-    // csv :: Container Signal v
-    const csv = scsv.currentValue()
+    // csa :: Container Signal v
+    const csa = scsa.currentValue()
 
-    unsubscribe = subscribeCsv(subscriptionSink, csv)
+    unsubscribe = subscribeCsa(subscriptionSink, csa)
   } catch(err) {
     // ignore because the initial state is error state,
     // which don't need to be updated in the subscription
   }
 
-  scsv::subscribeGenerator(function*() {
+  scsa::subscribeGenerator(function*() {
     while(subscriptionSink.hasObservers()) {
       try {
-        const csv = yield
+        const csa = yield
 
         try {
-          const cv = csvToCv(csv)
+          const cv = csaToCv(csa)
           subscriptionSink.sendValue(cv)
         } catch(err) {
           subscriptionSink.sendError(err)
         }
 
-        const newUnsubscribe = subscribeCsv(subscriptionSink, csv)
+        const newUnsubscribe = subscribeCsa(subscriptionSink, csa)
         unsubscribePrevious(newUnsubscribe)
       } catch(err) {
         unsubscribePrevious()
@@ -52,31 +52,31 @@ const subscribeScsv = (subscriptionSink, scsv) => {
   })
 }
 
-// type C v = Container v
-// type CS v = Container Signal v
-// type SC v = Signal Container v
-// type SCS v = Signal Container Signal v
-// flattenScsv :: Signal Container Signal v -> Signal Container v
-export const flattenScsv = scsv => {
+// type C a = Container a
+// type CS a = Container Signal a
+// type SC a = Signal Container a
+// type SCS a = Signal Container Signal a
+// flattenScsa :: Signal Container Signal a -> Signal Container a
+export const flattenScsa = scsa => {
   const currentValue = () => {
-    const csv = scsv.currentValue()
-    return csvToCv(csv)
+    const csa = scsa.currentValue()
+    return csaToCv(csa)
   }
 
   const waitNext = async () => {
-    // nextPcsv :: Promise CS v
-    const nextPcsv = scsv.waitNext()
+    // nextPcsa :: Promise Container Signal a
+    const nextPcsa = scsa.waitNext()
 
-    const [err, csv] = scsv::safeValue()
-    if(err) return nextPcsv
+    const [err, csa] = scsa::safeValue()
+    if(err) return nextPcsa
 
-    return resolveAny([nextPcsv, waitCsv(csv)])
+    return resolveAny([nextPcsa, waitCsa(csa)])
   }
 
   const subscribe = observer => {
     const subscription = createSubscription()
     const unsubscribe =  subscription.subscribe(observer)
-    subscribeScsv(uniqueErrorSink(subscription), scsv)
+    subscribeScsa(uniqueErrorSink(subscription), scsa)
     return unsubscribe
   }
 

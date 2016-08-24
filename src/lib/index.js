@@ -5,8 +5,8 @@ export { handleSignalError } from './error'
 
 export { eventSignal, unitEventSignal } from './event'
 
-export { flattenCsv } from './flatten-csv'
-export { flattenScsv } from './flatten-scsv'
+export { flattenCsa } from './flatten-csa'
+export { flattenScsa } from './flatten-scsa'
 
 export { foldpSignal } from './foldp'
 

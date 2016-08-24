@@ -6,34 +6,34 @@ import { assertSignal } from './util'
 import { createSubscription } from './subscribe'
 
 import {
-  csvToCv, waitCsv,
-  subscribeCsv, uniqueErrorSink
+  csaToCv, waitCsa,
+  subscribeCsa, uniqueErrorSink
 } from './flatten-common'
 
-// type S v = Signal v
-// type C v = Container v
-// type CS v = Container Signal v
-// type SC v = Signal Container v
-// combineSignals :: Container Signal v -> Signal Container v
-export const flattenCsv = (csv) => {
-  if(!isImmutableMap(csv) && !isImmutableList(csv))
+// type S a = Signal a
+// type C a = Container a
+// type CS a = Container Signal a
+// type SC a = Signal Container a
+// combineSignals :: Container Signal a -> Signal Container a
+export const flattenCsa = (csa) => {
+  if(!isImmutableMap(csa) && !isImmutableList(csa))
     throw new TypeError('entries must be immutable map/list')
 
-  for(let signal of csv.values()) {
+  for(let signal of csa.values()) {
     assertSignal(signal)
   }
 
   const getCurrentValue = () =>
-    csvToCv(csv)
+    csaToCv(csa)
 
   const waitNext = () =>
-    waitCsv(csv)
+    waitCsa(csa)
 
   const subscribe = observer => {
     const subscription = createSubscription()
     const unsubscribe = subscription.subscribe(observer)
 
-    subscribeCsv(uniqueErrorSink(subscription), csv)
+    subscribeCsa(uniqueErrorSink(subscription), csa)
     return unsubscribe
   }
 

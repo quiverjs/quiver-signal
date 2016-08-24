@@ -7,26 +7,26 @@ import {
 } from '../lib/method'
 
 import {
-  valueSignal, flattenCsv
+  valueSignal, flattenCsa
 } from '../lib'
 
-// type S v = Signal v
-// type C v = Container v
-// type CS v = Container Signal v
-// type SC v = Signal Container v
-// combineSignals :: CS v -> SC v
+// type S a = Signal a
+// type C a = Container a
+// type CS a = Container Signal a
+// type SC a = Signal Container a
+// combineSignals :: CS a -> SC a
 test('flatten Container Signal v', assert => {
   assert::asyncTest('basic flatten', async function(assert) {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
 
-    // csv :: Container Signal v
-    const csv = ImmutableMap()
+    // csa :: Container Signal a
+    const csa = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    // signal :: Signal Container v
-    const signal = flattenCsv(csv)
+    // signal :: Signal Container a
+    const signal = flattenCsa(csa)
 
     assert.deepEqual(signal.currentValue().toObject(),
       { foo: 'foo', bar: 'bar' })
@@ -61,13 +61,13 @@ test('flatten Container Signal v', assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal] = valueSignal('bar')
 
-    // csv :: Container Signal v
-    const csv = ImmutableMap()
+    // csa :: Container Signal a
+    const csa = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    // combinedSignal :: Signal Container v
-    const combinedSignal = flattenCsv(csv)
+    // combinedSignal :: Signal Container a
+    const combinedSignal = flattenCsa(csa)
 
     let observedFoo = []
 
@@ -111,11 +111,11 @@ test('flatten Container Signal v', assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
 
-    const csv = ImmutableMap()
+    const csa = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    const combinedSignal = flattenCsv(csv)
+    const combinedSignal = flattenCsa(csa)
 
     combinedSignal::subscribeGenerator(function*() {
       const map1 = yield
