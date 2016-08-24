@@ -1,12 +1,12 @@
 export { subscribeChannel } from './channel'
 
-export { combineSignals } from './combine'
 
 export { handleSignalError } from './error'
 
 export { eventSignal, unitEventSignal } from './event'
 
-export { flattenSignal } from './flatten'
+export { flattenCsv } from './flatten-csv'
+export { flattenScsv } from './flatten-scsv'
 
 export { foldpSignal } from './foldp'
 

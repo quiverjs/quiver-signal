@@ -1,10 +1,4 @@
-import {
-  isImmutableMap, isImmutableList
-} from 'quiver-util/immutable'
-
-import { assertSignal } from './util'
 import { subscribeGenerator } from './generator'
-import { createSubscription } from './subscribe'
 
 class CompositeError extends Error {
   constructor(errorMap) {
@@ -44,11 +38,15 @@ export const uniqueErrorSink = subscription => {
   }
 }
 
-export const signalMapToValues = signalMap => {
-  let errors = signalMap.clear()
-  let values = signalMap.clear()
+// csvToCv :: Container Signal v -> Container v
+export const csvToCv = csv => {
+  // errors :: Container error
+  let errors = csv.clear()
 
-  for(const [key, signal] of signalMap.entries()) {
+  // values :: Container value
+  let values = csv.clear()
+
+  for(const [key, signal] of csv.entries()) {
     try {
       const value = signal.currentValue()
       values = values.set(key, value)
@@ -64,16 +62,17 @@ export const signalMapToValues = signalMap => {
   return values
 }
 
-export const subscribeSignalMap = (subscriptionSink, signalMap) => {
+// subscribeCsv :: SubscriptionSink -> Container Signal v -> ()
+export const subscribeCsv = (subscriptionSink, csv) => {
   let unsubscribed = false
   const unsubscribe = () => {
     unsubscribed = true
   }
 
-  let valueMap = signalMap.clear()
-  let errorMap = signalMap.clear()
+  let valueMap = csv.clear()
+  let errorMap = csv.clear()
 
-  for(let [key, signal] of signalMap.entries()) {
+  for(let [key, signal] of csv.entries()) {
     try {
       const value = signal.currentValue()
       valueMap = valueMap.set(key, value)
@@ -121,48 +120,17 @@ export const subscribeSignalMap = (subscriptionSink, signalMap) => {
     })
   }
 
-  for(let [key, signal] of signalMap.entries()) {
+  for(let [key, signal] of csv.entries()) {
     pipeSignal(key, signal)
   }
 
   return unsubscribe
 }
 
-export const waitSignalMap = signalMap =>
+// waitCsv :: Container Signal v -> Promise ()
+export const waitCsv = csv =>
   new Promise((resolve, reject) => {
-    for(let signal of signalMap.values()) {
+    for(let signal of csv.values()) {
       signal.waitNext().then(resolve, reject)
     }
   })
-
-export const combineSignals = (signalMap) => {
-  if(!isImmutableMap(signalMap) && !isImmutableList(signalMap))
-    throw new TypeError('entries must be immutable map/list')
-
-  for(let signal of signalMap.values()) {
-    assertSignal(signal)
-  }
-
-  const getCurrentValue = () =>
-    signalMapToValues(signalMap)
-
-  const waitNext = () =>
-    waitSignalMap(signalMap)
-
-  const subscribe = observer => {
-      const subscription = createSubscription()
-      const unsubscribe = subscription.subscribe(observer)
-
-      subscribeSignalMap(uniqueErrorSink(subscription), signalMap)
-      return unsubscribe
-  }
-
-  const combinedSignal = {
-    isQuiverSignal: true,
-    currentValue: getCurrentValue,
-    waitNext,
-    subscribe
-  }
-
-  return combinedSignal
-}

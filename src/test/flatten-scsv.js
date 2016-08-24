@@ -2,21 +2,30 @@ import test from 'tape'
 import { ImmutableMap } from 'quiver-util/immutable'
 import { asyncTest } from 'quiver-util/tape'
 
-import { valueSignal, flattenSignal } from '../lib'
+import { valueSignal, flattenScsv } from '../lib'
 import { subscribeChannel } from '../lib/method'
 
-test('flatten signal test', assert => {
+// type C v = Container v
+// type CS v = Container Signal v
+// type SC v = Signal Container v
+// type SCS v = Signal Container Signal v
+// flattenScsv :: Signal Container Signal v -> Signal Container v
+test('flatten Signal Container Signal v', assert => {
   assert::asyncTest('basic flatten', async assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
     const [bazSignal, bazSetter] = valueSignal('baz')
 
-    const signalMap = ImmutableMap()
+    // csv :: Container Signal v
+    const csv = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    const [nestedSignal, signalMapSetter] = valueSignal(signalMap)
-    const flattenedSignal = flattenSignal(nestedSignal)
+    // scsv :: Signal Container Signal v
+    const [scsv, csvSetter] = valueSignal(csv)
+
+    // flattenedSignal :: Signal Container v
+    const flattenedSignal = flattenScsv(scsv)
 
     const channel = flattenedSignal::subscribeChannel()
 
@@ -35,11 +44,11 @@ test('flatten signal test', assert => {
     assert.equal(map2.get('foo'), 'food')
     assert.equal(map2.get('bar'), 'beer')
 
-    const newSignalMap = ImmutableMap()
+    const newCsv = ImmutableMap()
       .set('foo', fooSignal)
       .set('baz', bazSignal)
 
-    signalMapSetter.setValue(newSignalMap)
+    csvSetter.setValue(newCsv)
 
     const map3 = await channel.nextValue()
     assert.equal(map3.get('foo'), 'food')
@@ -57,17 +66,17 @@ test('flatten signal test', assert => {
     assert.end()
   })
 
-  assert::asyncTest('basic flatten', async assert => {
+  assert::asyncTest('basic flatten 2', async assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
     const [bazSignal, bazSetter] = valueSignal('baz')
 
-    const signalMap = ImmutableMap()
+    const csv = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    const [nestedSignal, signalMapSetter] = valueSignal(signalMap)
-    const flattenedSignal = flattenSignal(nestedSignal)
+    const [scsv, csvSetter] = valueSignal(csv)
+    const flattenedSignal = flattenScsv(scsv)
 
     const channel = flattenedSignal::subscribeChannel()
 
@@ -93,8 +102,8 @@ test('flatten signal test', assert => {
 
     barSetter.setValue('beer')
 
-    const signalMap2 = signalMap.set('baz', bazSignal)
-    signalMapSetter.setValue(signalMap2)
+    const csv2 = csv.set('baz', bazSignal)
+    csvSetter.setValue(csv2)
 
     fooSetter.setValue('fool')
 
@@ -106,7 +115,7 @@ test('flatten signal test', assert => {
     },
     'all updates should be sent at once only after error is recovered')
 
-    signalMapSetter.setError('map error')
+    csvSetter.setError('map error')
     bazSetter.setValue('bazaar')
 
     try {
@@ -116,8 +125,8 @@ test('flatten signal test', assert => {
       assert.equal(err, 'map error')
     }
 
-    const signalMap3 = signalMap2.delete('bar')
-    signalMapSetter.setValue(signalMap3)
+    const csv3 = csv2.delete('bar')
+    csvSetter.setValue(csv3)
 
     const map3 = await channel.nextValue()
     assert.deepEqual(map3.toObject(), {

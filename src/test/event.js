@@ -1,5 +1,4 @@
 import test from 'tape'
-import { ImmutableMap } from 'quiver-util/immutable'
 import { asyncTest } from 'quiver-util/tape'
 
 import { eventSignal } from '../lib'

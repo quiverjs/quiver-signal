@@ -7,19 +7,26 @@ import {
 } from '../lib/method'
 
 import {
-  valueSignal, combineSignals
+  valueSignal, flattenCsv
 } from '../lib'
 
-test('combine signal test', assert => {
-  assert::asyncTest('basic combine', async function(assert) {
+// type S v = Signal v
+// type C v = Container v
+// type CS v = Container Signal v
+// type SC v = Signal Container v
+// combineSignals :: CS v -> SC v
+test('flatten Container Signal v', assert => {
+  assert::asyncTest('basic flatten', async function(assert) {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
 
-    const signalMap = ImmutableMap()
+    // csv :: Container Signal v
+    const csv = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    const signal = combineSignals(signalMap)
+    // signal :: Signal Container v
+    const signal = flattenCsv(csv)
 
     assert.deepEqual(signal.currentValue().toObject(),
       { foo: 'foo', bar: 'bar' })
@@ -54,11 +61,13 @@ test('combine signal test', assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal] = valueSignal('bar')
 
-    const signalMap = ImmutableMap()
+    // csv :: Container Signal v
+    const csv = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    const combinedSignal = combineSignals(signalMap)
+    // combinedSignal :: Signal Container v
+    const combinedSignal = flattenCsv(csv)
 
     let observedFoo = []
 
@@ -102,11 +111,11 @@ test('combine signal test', assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
 
-    const signalMap = ImmutableMap()
+    const csv = ImmutableMap()
       .set('foo', fooSignal)
       .set('bar', barSignal)
 
-    const combinedSignal = combineSignals(signalMap)
+    const combinedSignal = flattenCsv(csv)
 
     combinedSignal::subscribeGenerator(function*() {
       const map1 = yield
