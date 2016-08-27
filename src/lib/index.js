@@ -7,6 +7,7 @@ export { eventSignal, unitEventSignal } from './event'
 
 export { flattenCsa } from './flatten-csa'
 export { flattenScsa } from './flatten-scsa'
+export { flattenSsa } from './flatten-ssa'
 
 export { foldpSignal } from './foldp'
 

@@ -14,7 +14,7 @@ import {
 // type C a = Container a
 // type CS a = Container Signal a
 // type SC a = Signal Container a
-// combineSignals :: Container Signal a -> Signal Container a
+// flattenCsa :: Container Signal a -> Signal Container a
 export const flattenCsa = (csa) => {
   if(!isImmutableMap(csa) && !isImmutableList(csa))
     throw new TypeError('entries must be immutable map/list')
