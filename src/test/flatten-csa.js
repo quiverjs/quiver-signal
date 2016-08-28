@@ -15,7 +15,7 @@ import {
 // type CS a = Container Signal a
 // type SC a = Signal Container a
 // combineSignals :: CS a -> SC a
-test('flatten Container Signal v', assert => {
+test('flatten Container Signal a', assert => {
   assert::asyncTest('basic flatten', async function(assert) {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')

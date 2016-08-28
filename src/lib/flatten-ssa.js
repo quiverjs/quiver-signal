@@ -14,6 +14,7 @@ const subscribeSignal = (subscriptionSink, signal) => {
     while(subscriptionSink.hasObservers() && !unsubscribed) {
       try {
         const value = yield
+        if(unsubscribed) return
         subscriptionSink.sendValue(value)
 
       } catch(err) {
@@ -50,17 +51,23 @@ const subscribeSsa = (subscriptionSink, ssa) => {
     while(subscriptionSink.hasObservers()) {
       try {
         const signal = yield
-        if(!signal) continue
 
-        try {
-          const value = signal.currentValue()
-          subscriptionSink.sendValue(value)
-        } catch(err) {
-          subscriptionSink.sendError(err)
+        if(!signal) {
+          subscriptionSink.sendValue(null)
+          unsubscribePrevious()
+
+        } else {
+          try {
+            assertSignal(signal)
+            const value = signal.currentValue()
+            subscriptionSink.sendValue(value)
+          } catch(err) {
+            subscriptionSink.sendError(err)
+          }
+
+          const newUnsubscribe = subscribeSignal(subscriptionSink, signal)
+          unsubscribePrevious(newUnsubscribe)
         }
-
-        const newUnsubscribe = subscribeSignal(subscriptionSink, signal)
-        unsubscribePrevious(newUnsubscribe)
       } catch(err) {
         unsubscribePrevious()
         subscriptionSink.sendError(err)

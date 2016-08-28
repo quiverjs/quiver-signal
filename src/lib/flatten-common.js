@@ -111,6 +111,8 @@ export const subscribeCsa = (subscriptionSink, csa) => {
       while(subscriptionSink.hasObservers() && !unsubscribed) {
         try {
           const value = yield
+          if(unsubscribed) return
+          
           updateValue(key, value)
 
         } catch(err) {

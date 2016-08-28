@@ -10,7 +10,7 @@ import { subscribeChannel } from '../lib/method'
 // type SC a = Signal Container a
 // type SCS a = Signal Container Signal a
 // flattenScsa :: Signal Container Signal a -> Signal Container a
-test('flatten Signal Container Signal v', assert => {
+test('flatten Signal Container Signal a', assert => {
   assert::asyncTest('basic flatten', async assert => {
     const [fooSignal, fooSetter] = valueSignal('foo')
     const [barSignal, barSetter] = valueSignal('bar')
