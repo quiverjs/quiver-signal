@@ -1,4 +1,4 @@
-import { subscribeGenerator } from './subscribe'
+import { subscribeGenerator } from './generator'
 
 export const listenEvent = (eventSignal, listener) =>
   eventSignal::subscribeGenerator(function*() {

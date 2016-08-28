@@ -108,6 +108,7 @@ export const flattenSsa = ssa => {
   return {
     currentValue,
     waitNext,
-    subscribe
+    subscribe,
+    isQuiverSignal: true
   }
 }

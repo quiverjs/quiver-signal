@@ -3,18 +3,20 @@ import { valueSignal } from './value'
 export const eventSignal = () => {
   const [signal, setter] = valueSignal(null)
 
-  const eventHandler = ev => {
+  const emitter = ev => {
     setter.setValue(ev)
     setter.setValue(null)
   }
 
-  return [signal, eventHandler]
+  signal.isQuiverEventSignal = true
+
+  return [signal, emitter]
 }
 
 export const unitEventSignal = () => {
-  const [signal, eventHandler] = eventSignal()
+  const [signal, emitter] = eventSignal()
 
-  const unitEventHandler = () => eventHandler(true)
+  const unitEmitter = () => emitter(true)
 
-  return [signal, unitEventHandler]
+  return [signal, unitEmitter]
 }
