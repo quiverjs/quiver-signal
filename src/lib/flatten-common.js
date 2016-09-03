@@ -2,7 +2,10 @@ import { subscribeGenerator } from './generator'
 
 class CompositeError extends Error {
   constructor(errorMap) {
-    super('error in signal combine')
+    const errorMapStr = errorMap
+      .map(err => err.stack)
+
+    super(`error in signal combine: ${errorMapStr}`)
     this.errorMap = errorMap
   }
 }
@@ -112,7 +115,7 @@ export const subscribeCsa = (subscriptionSink, csa) => {
         try {
           const value = yield
           if(unsubscribed) return
-          
+
           updateValue(key, value)
 
         } catch(err) {
